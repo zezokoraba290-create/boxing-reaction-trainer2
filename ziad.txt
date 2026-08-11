@@ -1,9 +1,4 @@
 random
 time
-kivy.app
-kivy.clock
-kivy.uix.boxlayout 
-kivy.uix.button 
-kivy.uix.label 
-kivy.utils 
-
+threading
+flet
