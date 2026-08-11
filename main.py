@@ -74,7 +74,7 @@ class ReactionTrainer:
         duration_buttons = []
         for sec in DURATIONS:
             btn = ft.ElevatedButton(
-                text=f"{sec}s",
+                content=ft.Text(f"{sec}s"),
                 width=70,
                 on_click=lambda e, s=sec: self.set_duration(s),
             )
@@ -88,10 +88,9 @@ class ReactionTrainer:
 
         # زرار START
         self.start_btn = ft.ElevatedButton(
-            text="START",
+            content=ft.Text("START", color="#FFFFFF"),
             icon=ft.icons.PLAY_ARROW,
             bgcolor="#4CAF50",
-            color="#FFFFFF",
             width=150,
             height=50,
             on_click=self.start_session,
@@ -99,10 +98,9 @@ class ReactionTrainer:
 
         # زرار STOP
         self.stop_btn = ft.ElevatedButton(
-            text="STOP",
+            content=ft.Text("STOP", color="#FFFFFF"),
             icon=ft.icons.STOP,
             bgcolor="#F44336",
-            color="#FFFFFF",
             width=150,
             height=50,
             on_click=self.stop_session,
