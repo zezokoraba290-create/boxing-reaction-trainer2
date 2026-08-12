@@ -1,28 +1,30 @@
 import flet as ft
+import flet_audio as fta
 import random
 import time
 import threading
 
 
+# اسم كل حركة + اسم ملف الصوت المرتبط بيها (في مجلد assets/sounds)
 MOVES = [
-    "Jab",
-    "Cross",
-    "Lead hook",
-    "Rear hook",
-    "Lead uppercut",
-    "Rear uppercut",
-    "Slip right",
-    "Slip left",
-    "Roll right",
-    "Roll left",
-    "Pull back",
-    "Step back",
-    "Step left",
-    "Step right",
-    "Pivot left",
-    "Pivot right",
-    "Parry",
-    "High guard",
+    ("Jab", "jab.mp3"),
+    ("Cross", "cross.mp3"),
+    ("Lead hook", "lead_hook.mp3"),
+    ("Rear hook", "rear_hook.mp3"),
+    ("Lead uppercut", "lead_uppercut.mp3"),
+    ("Rear uppercut", "rear_uppercut.mp3"),
+    ("Slip right", "slip_right.mp3"),
+    ("Slip left", "slip_left.mp3"),
+    ("Roll right", "roll_right.mp3"),
+    ("Roll left", "roll_left.mp3"),
+    ("Pull back", "pull_back.mp3"),
+    ("Step back", "step_back.mp3"),
+    ("Step left", "step_left.mp3"),
+    ("Step right", "step_right.mp3"),
+    ("Pivot left", "pivot_left.mp3"),
+    ("Pivot right", "pivot_right.mp3"),
+    ("Parry", "parry.mp3"),
+    ("High guard", "high_guard.mp3"),
 ]
 
 DURATIONS = [10, 30, 60, 120]
@@ -42,6 +44,19 @@ class ReactionTrainer:
         page.padding = 20
         page.vertical_alignment = ft.MainAxisAlignment.CENTER
         page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+
+        # عنصر الصوت (بيشتغل من غير ما يتشاف على الشاشة)
+        self.audio_player = fta.Audio(
+            src="",
+            autoplay=False,
+            volume=1.0,
+            on_loaded=lambda e: print("AUDIO: loaded", flush=True),
+            on_state_change=lambda e: print(f"AUDIO: state changed -> {e.data}", flush=True),
+        )
+        page.overlay.append(self.audio_player)
+
+        # وقف أي تايمر شغال لو المستخدم قفل نافذة التطبيق
+        page.on_disconnect = lambda e: self.stop_session()
 
         # العنوان
         self.title = ft.Text(
@@ -122,6 +137,14 @@ class ReactionTrainer:
             text_align=ft.TextAlign.CENTER,
         )
 
+        # زرار تجربة الصوت (للتأكد إن الصوت شغال أصلاً)
+        self.test_sound_btn = ft.ElevatedButton(
+            content=ft.Text("🔊 TEST SOUND"),
+            width=150,
+            height=40,
+            on_click=lambda e: self.play_sound("jab.mp3"),
+        )
+
         # ضيف كل حاجة للصفحة
         page.add(
             self.title,
@@ -134,6 +157,8 @@ class ReactionTrainer:
             ft.Container(height=20),
             self.controls_row,
             ft.Container(height=10),
+            self.test_sound_btn,
+            ft.Container(height=10),
             self.note,
         )
 
@@ -143,6 +168,23 @@ class ReactionTrainer:
             self.status.value = f"Duration: {seconds} seconds"
             self.page.update()
 
+    async def _safe_play(self):
+        """يشغل الصوت من الأول"""
+        print(f"AUDIO: trying to play -> {self.audio_player.src}", flush=True)
+        try:
+            await self.audio_player.play()
+            print("AUDIO: play() returned successfully", flush=True)
+        except Exception as ex:
+            print(f"AUDIO: play() error -> {ex}", flush=True)
+
+    def play_sound(self, filename: str):
+        """يشغل ملف الصوت المرتبط بالحركة"""
+        self.audio_player.src = f"sounds/{filename}"
+        self.audio_player.update()
+        # play() بقت async في نسخة flet-audio الحديثة، فبنشغلها
+        # على event loop الصفحة عشان تشتغل بأمان من جوه الـ Timer thread
+        self.page.run_task(self._safe_play)
+
     def give_cue(self):
         if not self.running:
             return
@@ -151,12 +193,13 @@ class ReactionTrainer:
             self.stop_session()
             return
 
-        move = random.choice(MOVES)
-        self.move_display.value = move.upper()
+        move_name, sound_file = random.choice(MOVES)
+        self.move_display.value = move_name.upper()
         self.page.update()
+        self.play_sound(sound_file)
 
-        # الجولة الجاية
-        delay = random.uniform(0.7, 2.2)
+        # الجولة الجاية - أقل مسافة 1.5 ثانية عشان الكلمة تتقال كاملة قبل الحركة الجاية
+        delay = random.uniform(1.5, 3.0)
         self.timer = threading.Timer(delay, self.give_cue)
         self.timer.start()
 
@@ -187,11 +230,15 @@ class ReactionTrainer:
         self.stop_btn.disabled = True
         self.status.value = "SESSION FINISHED"
         self.move_display.value = ""
-        self.page.update()
+        try:
+            self.page.update()
+        except Exception:
+            # الصفحة ممكن تكون اتقفلت خلاص (زي إقفال نافذة التطبيق)
+            pass
 
 
 def main(page: ft.Page):
     ReactionTrainer(page)
 
 
-ft.app(target=main)
+ft.app(target=main, assets_dir="assets")
