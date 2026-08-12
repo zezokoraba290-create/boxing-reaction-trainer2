@@ -89,7 +89,7 @@ class ReactionTrainer:
         # زرار START
         self.start_btn = ft.ElevatedButton(
             content=ft.Text("START", color="#FFFFFF"),
-            icon=ft.icons.PLAY_ARROW,
+            icon=ft.Icons.PLAY_ARROW,
             bgcolor="#4CAF50",
             width=150,
             height=50,
@@ -99,7 +99,7 @@ class ReactionTrainer:
         # زرار STOP
         self.stop_btn = ft.ElevatedButton(
             content=ft.Text("STOP", color="#FFFFFF"),
-            icon=ft.icons.STOP,
+            icon=ft.Icons.STOP,
             bgcolor="#F44336",
             width=150,
             height=50,
